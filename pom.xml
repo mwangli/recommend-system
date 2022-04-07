@@ -107,6 +107,11 @@
 <!--            <artifactId>mongo-java-driver</artifactId>-->
 <!--            <version>3.2.2</version>-->
 <!--        </dependency>-->
+        <dependency>
+            <groupId>com.stratio.datasource</groupId>
+            <artifactId>spark-mongodb_2.10</artifactId>
+            <version>0.12.0</version>
+        </dependency>
     </dependencies>
 
     <build>
