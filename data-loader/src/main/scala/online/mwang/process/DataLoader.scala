@@ -38,30 +38,41 @@ object DataLoader {
       Rating(field(0).toInt, field(1).toInt, field(2).toDouble, field(3).toLong)
     }).toDF()
     // 3.保存数据
-    implicit val mongoConfig: MongoConfig = MongoConfig(config("mongo.uri"), config("mongo.db"))
-    saveToMongoDB(productDF, MONGODB_PRODUCT_COLLECTION, Array("productId"))
-    saveToMongoDB(ratingDF, MONGODB_RATING_COLLECTION, Array("productId", "userId"))
+    productDF.write
+      .option("uri", config("mongo.uri"))
+      .option("database", config("mongo.db"))
+      .option("collection", MONGODB_PRODUCT_COLLECTION)
+      .mode("overwrite")
+      .format("com.mongodb.spark.sql")
+      .save()
+    ratingDF.write
+      .option("uri", config("mongo.uri"))
+      .option("database", config("mongo.db"))
+      .option("collection", MONGODB_RATING_COLLECTION)
+      .mode("overwrite")
+      .format("com.mongodb.spark.sql")
+      .save()
     // 4.释放资源
     spark.stop()
   }
 
   def saveToMongoDB(df: DataFrame, collection: String, indexes: Seq[String])(implicit mongoConfig: MongoConfig) = {
     // 1.新建MongoDB连接
-    val mongoClient = MongoClient(MongoClientURI(mongoConfig.uri))
-    val dbCollection = mongoClient(mongoConfig.db)(collection)
-    // 2.删除旧数据
-    dbCollection.dropCollection()
-    // 3.写入新数据
-    df.write
-      .option("uri", mongoConfig.uri)
-//      .option("database", mongoConfig.db)
-      .option("collection", collection)
-      .mode("overwrite")
-      .format("com.mongodb.spark.sql")
-      .save()
-    // 4.创建索引
-    indexes.foreach(index => dbCollection.createIndex(MongoDBObject(index -> 1)))
-    // 5.关闭连接
-    mongoClient.close()
+//    val mongoClient = MongoClient(MongoClientURI(mongoConfig.uri))
+//    val dbCollection = mongoClient(mongoConfig.db)(collection)
+//    // 2.删除旧数据
+//    dbCollection.dropCollection()
+//    // 3.写入新数据
+//    df.write
+//      .option("uri", mongoConfig.uri)
+//      //      .option("database", mongoConfig.db)
+//      .option("collection", collection)
+//      .mode("overwrite")
+//      .format("com.mongodb.spark.sql")
+//      .save()
+//    // 4.创建索引
+//    indexes.foreach(index => dbCollection.createIndex(MongoDBObject(index -> 1)))
+//    // 5.关闭连接
+//    mongoClient.close()
   }
 }
