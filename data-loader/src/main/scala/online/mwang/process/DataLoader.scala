@@ -1,6 +1,6 @@
 package online.mwang.process
 
-import com.mongodb.casbah.Imports.MongoClient
+import com.mongodb.casbah.MongoClient
 import com.mongodb.casbah.MongoClientURI
 import com.mongodb.casbah.commons.MongoDBObject
 import online.mwang.bean.{MongoConfig, Product, Rating}
@@ -18,7 +18,7 @@ object DataLoader {
     // 1.准备环境
     val config = Map(
       "spark.cores" -> "local[*]",
-      "mongo.uri" -> "mongodb://test1:27017",
+      "mongo.uri" -> "mongodb://test1:27017/recommend",
       "mongo.db" -> "recommend"
     )
     val sparkConf = new SparkConf()
@@ -54,7 +54,7 @@ object DataLoader {
     // 3.写入新数据
     df.write
       .option("uri", mongoConfig.uri)
-      .option("database", mongoConfig.db)
+//      .option("database", mongoConfig.db)
       .option("collection", collection)
       .mode("overwrite")
       .format("com.mongodb.spark.sql")
