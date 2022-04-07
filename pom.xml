@@ -49,38 +49,38 @@
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-core_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-sql_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-mllib_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-mllib_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-graphx_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-graphx_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-streaming_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming-kafka-0-10_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-streaming-kafka-0-10_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql-kafka-0-10_2.12</artifactId>
-            <version>3.2.1</version>
+            <artifactId>spark-sql-kafka-0-10_2.11</artifactId>
+            <version>${spark.version}</version>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
@@ -95,23 +95,18 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>casbah-core_2.12</artifactId>
-            <version>3.1.1</version>
+            <version>${casbah.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mongodb.spark</groupId>
-            <artifactId>mongo-spark-connector_2.12</artifactId>
-            <version>3.0.1</version>
+            <artifactId>mongo-spark-connector_2.11</artifactId>
+            <version>${mongdb-spark.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongo-java-driver</artifactId>-->
-<!--            <version>3.2.2</version>-->
-<!--        </dependency>-->
-        <dependency>
-            <groupId>com.stratio.datasource</groupId>
-            <artifactId>spark-mongodb_2.10</artifactId>
-            <version>0.12.0</version>
-        </dependency>
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongo-java-driver</artifactId>-->
+        <!--            <version>3.2.2</version>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <build>

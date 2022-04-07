@@ -19,7 +19,7 @@ object DataLoader {
     val config = Map(
       "spark.cores" -> "local[*]",
       "mongo.uri" -> "mongodb://test1:27017",
-      "mongo.db" -> "recommend",
+      "mongo.db" -> "recommend"
     )
     val sparkConf = new SparkConf()
       .setMaster("local[*]")
