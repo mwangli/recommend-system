@@ -39,8 +39,20 @@ object DataLoader {
     }).toDF()
     // 3.保存数据
     implicit val mongoConfig: MongoConfig = MongoConfig(config("mongo.uri"), config("mongo.db"))
-    saveToMongoDB(productDF, MONGODB_PRODUCT_COLLECTION, Array("productId"))
-    saveToMongoDB(ratingDF, MONGODB_RATING_COLLECTION, Array("productId", "userId"))
+    productDF.write
+      .option("uri", mongoConfig.uri)
+      .option("collection", MONGODB_PRODUCT_COLLECTION)
+      .mode("overwrite")
+      .format("com.mongodb.spark.sql")
+      .save()
+    ratingDF.write
+      .option("uri", mongoConfig.uri)
+      .option("collection", MONGODB_RATING_COLLECTION)
+      .mode("overwrite")
+      .format("com.mongodb.spark.sql")
+      .save()
+//    saveToMongoDB(productDF, MONGODB_PRODUCT_COLLECTION, Array("productId"))
+//    saveToMongoDB(ratingDF, MONGODB_RATING_COLLECTION, Array("productId", "userId"))
     // 4.释放资源
     spark.stop()
   }
