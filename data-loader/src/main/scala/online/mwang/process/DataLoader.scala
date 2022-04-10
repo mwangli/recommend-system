@@ -58,21 +58,21 @@ object DataLoader {
 
   def saveToMongoDB(df: DataFrame, collection: String, indexes: Seq[String])(implicit mongoConfig: MongoConfig) = {
     // 1.新建MongoDB连接
-//    val mongoClient = MongoClient(MongoClientURI(mongoConfig.uri))
-//    val dbCollection = mongoClient(mongoConfig.db)(collection)
-//    // 2.删除旧数据
-//    dbCollection.dropCollection()
-//    // 3.写入新数据
-//    df.write
-//      .option("uri", mongoConfig.uri)
-//      //      .option("database", mongoConfig.db)
-//      .option("collection", collection)
-//      .mode("overwrite")
-//      .format("com.mongodb.spark.sql")
-//      .save()
-//    // 4.创建索引
-//    indexes.foreach(index => dbCollection.createIndex(MongoDBObject(index -> 1)))
-//    // 5.关闭连接
-//    mongoClient.close()
+    val mongoClient = MongoClient(MongoClientURI(mongoConfig.uri))
+    val dbCollection = mongoClient(mongoConfig.db)(collection)
+    // 2.删除旧数据
+    dbCollection.dropCollection()
+    // 3.写入新数据
+    df.write
+      .option("uri", mongoConfig.uri)
+//      .option("database", mongoConfig.db)
+      .option("collection", collection)
+      .mode("overwrite")
+      .format("com.mongodb.spark.sql")
+      .save()
+    // 4.创建索引
+    indexes.foreach(index => dbCollection.createIndex(MongoDBObject(index -> 1)))
+    // 5.关闭连接
+    mongoClient.close()
   }
 }
