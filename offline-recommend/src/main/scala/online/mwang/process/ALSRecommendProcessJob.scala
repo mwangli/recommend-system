@@ -33,7 +33,7 @@ object ALSRecommendProcessJob {
     val productRDD = ratingRDD.map(_._2).distinct()
     // 3.训练隐语义模型
     val trainData = ratingRDD.map(rating => Rating(rating._1, rating._2, rating._3.toFloat))
-    val model = ALS.train(trainData, 5, 10, 0.01)
+    val model = ALS.train(trainData, 100, 10, 0.01)
     // 4.获得预测评矩阵，得到用户的推荐列表
     val userProductRDD = userRDD.cartesian(productRDD)
     val predictRating = model.predict(userProductRDD)
@@ -72,7 +72,7 @@ object ALSRecommendProcessJob {
   }
 
   def cosSim(a: DoubleMatrix, b: DoubleMatrix): Double = {
-    a.dot(b) / a.norm2() * b.norm2()
+    a.dot(b) / (a.norm2() * b.norm2())
   }
 
 }
