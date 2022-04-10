@@ -24,8 +24,8 @@ object ALSRecommendProcessJob {
       .setAppName("StatisticRecommend")
     val spark = SparkSession.builder()
       .config(sparkConf).getOrCreate()
-    import spark.implicits._
     // 2.处理数据
+    import spark.implicits._
     val ratingDF = MongoUtils.readFromMongoDB(spark, T_RATINGS)
     val ratingRDD = ratingDF.as[ProductRating].rdd.map(rating => (rating.userId, rating.productId, rating.score)).cache()
     // 3.提取用户上商品数据集

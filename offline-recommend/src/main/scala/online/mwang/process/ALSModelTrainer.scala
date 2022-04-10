@@ -18,8 +18,8 @@ object ALSModelTrainer {
       .setAppName("StatisticRecommend")
     val spark = SparkSession.builder()
       .config(sparkConf).getOrCreate()
-    import spark.implicits._
     // 2.处理数据
+    import spark.implicits._
     val ratingDF = MongoUtils.readFromMongoDB(spark, T_RATINGS)
     val ratingRDD = ratingDF.as[ProductRating].rdd.map(rating => Rating(rating.userId, rating.productId, rating.score)).cache()
     // 3.切分训练集和测试集
