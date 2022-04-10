@@ -78,11 +78,9 @@ object OnlineRecommendProcessJob {
           // 保存实时推荐数据
           val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
           val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
-          val recommendations = userRecs.map(userRecs => Recommendation(userRecs._1, userRecs._2))
-          val recs = UserRecs(userId, recommendations)
           collection.save(MongoDBObject(
-            "userId" -> recs.userId,
-            "recs" -> recs.recs
+            "userId" -> userId,
+            "recs" -> userRecs
           ))
           mongoClient.close()
       }
