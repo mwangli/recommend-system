@@ -37,10 +37,10 @@ object StatisticRecommendProcessJob {
     // 4.2.近期热门商品统计过
     // 自定义日期装换UDF
     spark.udf.register("dateFormat", (s: Long) => DateUtils.format(s * 1000, "yyyyMM"))
-    val yearmonthRating = spark.sql("select productId, score, dateFormat(timestamp) as yearmonth from ratings")
+    val yearmonthRating = spark.sql("select productId, score, dateFormat(timestamp) yearmonth from ratings")
     //    yearmonthRating.show()
     yearmonthRating.createOrReplaceTempView("yearmonthRating")
-    val recentHotProductsDF = spark.sql("select yearmonth, productId, count(productId) as count from yearmonthRating group by yearmonth, productId order by yearmonth desc, count desc")
+    val recentHotProductsDF = spark.sql("select yearmonth, productId, count(productId) count from yearmonthRating group by yearmonth, productId order by yearmonth desc, count desc")
     //    recentHotProductsDF.show()
     MongoUtils.save2MongoDB(recentHotProductsDF, T_RECENT_HOT_PRODUCTS)
     // 4.3.优质商品统计
