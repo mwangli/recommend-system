@@ -7,7 +7,7 @@ import online.mwang.utils.MongoUtils
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import redis.clients.jedis.Jedis
@@ -25,7 +25,7 @@ object OnlineRecommendProcessJob {
   // 商品相似度列表
   val T_PRODUCT_RECS = "ProductRecs"
   // KafkaTopic
-  val KAFKA_TOPIC = "recommend"
+  val KAFKA_TOPIC = "recommend-item"
   // MongoDB
   val MONGODB_URI = "mongodb://test1:27017/recommend"
 
@@ -42,12 +42,12 @@ object OnlineRecommendProcessJob {
     // 2.处理数据
     import sparkSession.implicits._
     // 获取相似度矩阵
-    val ratingsRDD = MongoUtils.readFromMongoDB(sparkSession, T_RATINGS).as[ProductRating].rdd
+    val ratingsDS = MongoUtils.readFromMongoDB(sparkSession, T_RATINGS).as[ProductRating].rdd.toDS()
     val productRecs = MongoUtils.readFromMongoDB(sparkSession, T_PRODUCT_RECS)
-    productRecs.show()
     val productRecsMap = productRecs.as[ProductRecs].rdd.map(item =>
       (item.productId, item.recs.map(x => (x.productId, x.score)).toMap)
     ).collectAsMap()
+    productRecsMap.filter(x => x._1 == 4867) foreach (println(_))
     // 定义广播变量
     val productRecsMapBC = sc.broadcast(productRecsMap)
     // 3.连接Kafka
@@ -56,7 +56,7 @@ object OnlineRecommendProcessJob {
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id" -> "recommend-test",
-      "auto.offset.reset" -> "latest"
+      "auto.offset.reset" -> "latest",
     )
     val kafkaStream = KafkaUtils.createDirectStream[String, String](ssc, LocationStrategies.PreferConsistent,
       ConsumerStrategies.Subscribe[String, String](Array(KAFKA_TOPIC), kafkaParams))
@@ -72,7 +72,7 @@ object OnlineRecommendProcessJob {
           // 获取当前用户的最近评分
           val userRecentRatings = getUserRecentRatings(userId)
           // 获取当前商品相似度最高的商品列表
-          val candidateProducts = getTopSimProducts(ratingsRDD, userId, productId, productRecsMapBC.value)
+          val candidateProducts = getTopSimProducts(ratingsDS, userId, productId, productRecsMapBC.value)
           // 计算每个备选商品的推荐指数
           val steamRecs = computeProductScore(candidateProducts, userRecentRatings, productRecsMapBC.value)
           steamRecs.foreach(println(_))
@@ -89,16 +89,16 @@ object OnlineRecommendProcessJob {
 
   def getUserRecentRatings(userId: Int): Array[(Int, Double)] = {
     val jedis = new Jedis("test1")
-    jedis.lrange("userId" + userId, 0, 20)
-      .map { item =>
-        val split = item.split(",")
-        (split(0).toInt, split(1).toDouble)
-      }.toArray
+    val recentRatings = jedis.lrange("userId:" + userId, 0, 20)
+    recentRatings.map { item =>
+      val split = item.split(",")
+      (split(0).toInt, split(1).toDouble)
+    }.toArray
   }
 
-  def getTopSimProducts(rdd: RDD[ProductRating], userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {
-    val simProducts = simRecs(userId).toArray
-    val existProductId = rdd.filter(_.userId == userId)
+  def getTopSimProducts(ds: Dataset[ProductRating], userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {
+    val simProducts = simRecs(productId).toArray
+    val existProductId = ds.rdd.filter(_.userId == userId)
       .map(rating => rating.productId).collect()
     val topSimProducts = simProducts.filter(recs => !existProductId.contains(recs._1))
       .sortWith(_._2 > _._2).take(20).map(_._1)
