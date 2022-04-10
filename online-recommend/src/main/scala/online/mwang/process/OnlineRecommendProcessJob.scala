@@ -1,18 +1,18 @@
 package online.mwang.process
 
+import com.alibaba.fastjson.{JSON, JSONObject}
 import com.mongodb.casbah.commons.MongoDBObject
-import com.mongodb.casbah.{MongoClient, MongoClientURI, MongoConnection}
-import online.mwang.bean.{ProductRating, ProductRecs}
+import com.mongodb.casbah.{MongoClient, MongoClientURI}
+import online.mwang.bean.{ProductRating, ProductRecs, Recommendation, UserRecs}
 import online.mwang.utils.MongoUtils
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.spark.SparkConf
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 import redis.clients.jedis.Jedis
 
-import scala.collection.convert.ImplicitConversions.`iterable AsScalaIterable`
+import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -42,7 +42,7 @@ object OnlineRecommendProcessJob {
     // 2.处理数据
     import sparkSession.implicits._
     // 获取相似度矩阵
-    val ratingsDS = MongoUtils.readFromMongoDB(sparkSession, T_RATINGS).as[ProductRating].rdd.toDS()
+    val ratingsList = MongoUtils.readFromMongoDB(sparkSession, T_RATINGS).as[ProductRating].collect()
     val productRecs = MongoUtils.readFromMongoDB(sparkSession, T_PRODUCT_RECS)
     val productRecsMap = productRecs.as[ProductRecs].rdd.map(item =>
       (item.productId, item.recs.map(x => (x.productId, x.score)).toMap)
@@ -56,7 +56,7 @@ object OnlineRecommendProcessJob {
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id" -> "recommend-test",
-      "auto.offset.reset" -> "latest",
+      "auto.offset.reset" -> "latest"
     )
     val kafkaStream = KafkaUtils.createDirectStream[String, String](ssc, LocationStrategies.PreferConsistent,
       ConsumerStrategies.Subscribe[String, String](Array(KAFKA_TOPIC), kafkaParams))
@@ -72,14 +72,19 @@ object OnlineRecommendProcessJob {
           // 获取当前用户的最近评分
           val userRecentRatings = getUserRecentRatings(userId)
           // 获取当前商品相似度最高的商品列表
-          val candidateProducts = getTopSimProducts(ratingsDS, userId, productId, productRecsMapBC.value)
+          val candidateProducts = getTopSimProducts(ratingsList, userId, productId, productRecsMapBC.value)
           // 计算每个备选商品的推荐指数
-          val steamRecs = computeProductScore(candidateProducts, userRecentRatings, productRecsMapBC.value)
-          steamRecs.foreach(println(_))
-        // 保存实时推荐数据
-        //          val connection:MongoConnection = MongoClient(MongoClientURI(MONGODB_URI))(T_ONLINE_USER_RECS).getCollection(T_ONLINE_USER_RECS)
-        //          connection (MongoDBObject("userId"->userId))
-        //          MongoUtils.save2MongoDB(steamRecs, T_ONLINE_USER_RECS)
+          val userRecs = computeProductScore(candidateProducts, userRecentRatings, productRecsMapBC.value)
+          // 保存实时推荐数据
+          val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
+          val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
+          val recommendations = userRecs.map(userRecs => Recommendation(userRecs._1, userRecs._2))
+          val recs = UserRecs(userId, recommendations)
+          collection.save(MongoDBObject(
+            "userId" -> recs.userId,
+            "recs" -> recs.recs
+          ))
+          mongoClient.close()
       }
     }
     // 启动流处理任务
@@ -96,12 +101,11 @@ object OnlineRecommendProcessJob {
     }.toArray
   }
 
-  def getTopSimProducts(ds: Dataset[ProductRating], userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {
-    val simProducts = simRecs(productId).toArray
-    val existProductId = ds.rdd.filter(_.userId == userId)
-      .map(rating => rating.productId).collect()
+  def getTopSimProducts(ratingsList: Array[ProductRating], userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {
+    val simProducts = simRecs(productId)
+    val existProductId = ratingsList.filter(_.userId == userId).map(rating => rating.productId)
     val topSimProducts = simProducts.filter(recs => !existProductId.contains(recs._1))
-      .sortWith(_._2 > _._2).take(20).map(_._1)
+      .toArray.sortWith(_._2 > _._2).take(20).map(_._1)
     topSimProducts
   }
 
