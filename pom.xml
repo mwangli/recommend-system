@@ -24,21 +24,21 @@
         <kafka.version>0.10.2.1</kafka.version>
 
         <jblas.version>1.2.1</jblas.version>
-<!--                <mongdb-spark.version>2.0.0</mongdb-spark.version>-->
+        <!--  <mongdb-spark.version>2.0.0</mongdb-spark.version>-->
         <mongdb-spark.version>3.0.1</mongdb-spark.version>
-<!--                <spark.version>2.1.1</spark.version>-->
+        <!--   <spark.version>2.1.1</spark.version>-->
         <spark.version>3.2.1</spark.version>
-<!--                <scala.version>2.12.11</scala.version>-->
+        <!--  <scala.version>2.12.11</scala.version>-->
         <scala.version>2.12.10</scala.version>
         <mongo.driver.version>3.8.2</mongo.driver.version>
     </properties>
 
     <dependencies>
-<!--        <dependency>-->
-<!--            <groupId>org.scalanlp</groupId>-->
-<!--            <artifactId>jblas</artifactId>-->
-<!--            <version>2.1.1</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.scalanlp</groupId>
+            <artifactId>jblas</artifactId>
+            <version>${jblas.version}</version>
+        </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -119,16 +119,16 @@
             <artifactId>casbah-core_2.12</artifactId>
             <version>${casbah.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongo-java-driver</artifactId>-->
-<!--            <version>${mongo.driver.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.mongodb</groupId>-->
-<!--            <artifactId>mongodb-driver</artifactId>-->
-<!--            <version>${mongo.driver.version}</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongo-java-driver</artifactId>-->
+        <!--            <version>${mongo.driver.version}</version>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mongodb</groupId>-->
+        <!--            <artifactId>mongodb-driver</artifactId>-->
+        <!--            <version>${mongo.driver.version}</version>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <build>

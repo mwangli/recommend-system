@@ -1,6 +1,6 @@
 package online.mwang.process
 
-import online.mwang.bean.Rating
+import online.mwang.bean.ProductRating
 import online.mwang.utils.{DateUtils, MongoUtils}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SparkSession}

@@ -1,6 +1,6 @@
 package online.mwang.bean
 
-case class Rating(
+case class ProductRating(
    userId: Int,
    productId: Int,
    score: Double,
