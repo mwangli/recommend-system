@@ -7,7 +7,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object StatisticRecommendProcessJob {
 
-  val MONGODB_URI = "mongodb://test1:27017/recommend"
   // 评分表
   val T_RATINGS = "Ratings"
   // 热门商品表(评分表中出现次数最多的商品)
