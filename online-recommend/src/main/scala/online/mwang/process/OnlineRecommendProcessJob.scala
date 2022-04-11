@@ -41,9 +41,8 @@ object OnlineRecommendProcessJob {
     // 获取相似度矩阵
     val productRecs = MongoUtils.readFromMongoDB(sparkSession, T_PRODUCT_RECS)
     val productRecsMap = productRecs.as[ProductRecs].rdd.map(item =>
-      (item.productId, item.recs.map(x => (x.productId, x.score)).toMap)
-    ).collectAsMap()
-    productRecsMap.filter(x => x._1 == 4867) foreach (println(_))
+      (item.productId, item.recs.map(x => (x.productId, x.score)).toMap))
+      .collectAsMap()
     // 定义广播变量
     val productRecsMapBC = sc.broadcast(productRecsMap)
     // 3.连接Kafka
