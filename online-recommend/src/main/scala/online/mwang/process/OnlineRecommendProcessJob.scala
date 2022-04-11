@@ -9,9 +9,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.streaming.kafka010.{ConsumerStrategies, KafkaUtils, LocationStrategies}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import redis.clients.jedis.Jedis
 
-import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 
@@ -74,21 +72,8 @@ object OnlineRecommendProcessJob {
           val candidateProducts = getTopSimProducts(ratingsList, userId, productId, productRecsMapBC.value)
           // 计算每个备选商品的推荐指数
           val userRecs = computeProductScore(candidateProducts, userRecentRatings, productRecsMapBC.value)
-          userRecs.foreach(println(_))
           // 更新实时推荐数据
-          if (userRecs.nonEmpty) {
-            val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
-            val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
-            val res = collection.find(MongoDBObject("userId" -> userId))
-            println(res.one())
-            if (res.nonEmpty) {
-              collection.update(MongoDBObject("userId" -> userId),
-                MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
-            } else {
-              collection.save(MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
-            }
-            mongoClient.close()
-          }
+          saveOrUpdateToMongoDB(userId, userRecs)
           println("rating data finished! >>>>>>>>>>>>>>>>>")
       }
     }
@@ -142,5 +127,20 @@ object OnlineRecommendProcessJob {
     val productsSim = simRecs(productId)
     if (productsSim.nonEmpty) productsSim(productId2)
     else 0
+  }
+
+  def saveOrUpdateToMongoDB(userId: Int, userRecs: Array[(Int, Double)]): Unit = {
+    if (userRecs.nonEmpty) {
+      val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
+      val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
+      val res = collection.find(MongoDBObject("userId" -> userId))
+      if (res.nonEmpty) {
+        collection.update(MongoDBObject("userId" -> userId),
+          MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
+      } else {
+        collection.save(MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
+      }
+      mongoClient.close()
+    }
   }
 }
