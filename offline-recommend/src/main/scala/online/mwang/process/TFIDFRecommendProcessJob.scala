@@ -1,7 +1,6 @@
 package online.mwang.process
 
 import online.mwang.bean.{Product, ProductRecs, Recommendation}
-import online.mwang.process.ALSRecommendProcessJob.{T_PRODUCT_RECS, cosSim}
 import online.mwang.utils.MongoUtils
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.{HashingTF, IDF, Tokenizer}
@@ -11,10 +10,8 @@ import org.jblas.DoubleMatrix
 
 object TFIDFRecommendProcessJob {
 
-  // 评分表
+  // 商品表
   val T_PRODUCTS = "Products"
-  // 用户推荐列表
-  val T_USER_RECS = "UserRecs"
   // 商品相似度列表
   val T_CONTENT_PRODUCT_RECS = "ContentProductRecs"
 

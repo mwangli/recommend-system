@@ -106,14 +106,14 @@ object OnlineRecommendProcessJob {
     val lowScoreCount = mutable.HashMap[Int, Int]()
     // 计算和已评分商品的相似度
     for (productId <- candidateProducts; (productId2, score) <- userRecentRatings) {
-      // 从相似度矩阵中获取当前商品和已评分商品的相似度列表
+      // 从相似度矩阵中获取当前商品和已评分商品的相似度
       val productSim = getProductSim(productId, productId2, simRecs)
-      if (productSim > 0.4) {
+      if (productSim > 0.3) {
         // 加权计算每个备选商品的基础推荐分数
         basicScores += ((productId, productSim * score))
-        // 统计高低分出现的次数
-        if (score > 3) highScoreCount(productId2) = highScoreCount.getOrElse(productId2, 0) + 1
-        else lowScoreCount(productId2) = lowScoreCount.getOrElse(productId2, 0) + 1
+        // 统计相似商品高低分出现的次数
+        if (score > 3) highScoreCount(productId) = highScoreCount.getOrElse(productId, 0) + 1
+        else lowScoreCount(productId) = lowScoreCount.getOrElse(productId, 0) + 1
       }
     }
     // 计算备选商品的实际推荐分数
