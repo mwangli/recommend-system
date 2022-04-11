@@ -1,7 +1,6 @@
 package online.mwang.process
 
-import com.alibaba.fastjson.{JSON, JSONObject}
-import com.mongodb.casbah.commons.MongoDBObject
+import com.mongodb.casbah.Imports.MongoDBObject
 import com.mongodb.casbah.{MongoClient, MongoClientURI}
 import online.mwang.bean.{ProductRating, ProductRecs, Recommendation, UserRecs}
 import online.mwang.utils.MongoUtils
@@ -70,19 +69,27 @@ object OnlineRecommendProcessJob {
         case (userId, productId, _, _) =>
           println("rating data coming! >>>>>>>>>>>>>>>>>")
           // 获取当前用户的最近评分
-          val userRecentRatings = getUserRecentRatings(userId)
+          val userRecentRatings = getUserRecentRatings(ratingsList, userId)
           // 获取当前商品相似度最高的商品列表
           val candidateProducts = getTopSimProducts(ratingsList, userId, productId, productRecsMapBC.value)
           // 计算每个备选商品的推荐指数
           val userRecs = computeProductScore(candidateProducts, userRecentRatings, productRecsMapBC.value)
-          // 保存实时推荐数据
-          val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
-          val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
-          collection.save(MongoDBObject(
-            "userId" -> userId,
-            "recs" -> userRecs
-          ))
-          mongoClient.close()
+          userRecs.foreach(println(_))
+          // 更新实时推荐数据
+          if (userRecs.nonEmpty) {
+            val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
+            val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
+            val res = collection.find(MongoDBObject("userId" -> userId))
+            println(res.one())
+            if (res.nonEmpty) {
+              collection.update(MongoDBObject("userId" -> userId),
+                MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
+            } else {
+              collection.save(MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
+            }
+            mongoClient.close()
+          }
+          println("rating data finished! >>>>>>>>>>>>>>>>>")
       }
     }
     // 启动流处理任务
@@ -90,13 +97,8 @@ object OnlineRecommendProcessJob {
     ssc.awaitTermination()
   }
 
-  def getUserRecentRatings(userId: Int): Array[(Int, Double)] = {
-    val jedis = new Jedis("test1")
-    val recentRatings = jedis.lrange("userId:" + userId, 0, 20)
-    recentRatings.map { item =>
-      val split = item.split(",")
-      (split(0).toInt, split(1).toDouble)
-    }.toArray
+  def getUserRecentRatings(ratingsList: Array[ProductRating], userId: Int): Array[(Int, Double)] = {
+    ratingsList.filter(rating => rating.userId == userId).sortWith(_.timestamp > _.timestamp).take(10).map(r => (r.productId, r.score))
   }
 
   def getTopSimProducts(ratingsList: Array[ProductRating], userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {

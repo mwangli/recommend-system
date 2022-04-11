@@ -30,7 +30,7 @@
         <!--        <spark.version>3.2.1</spark.version>-->
         <scala.version>2.11.11</scala.version>
         <!--        <scala.version>2.11.10</scala.version>-->
-        <!--        <mongo.driver.version>3.2.2</mongo.driver.version>-->
+        <mongo.driver.version>3.2.2</mongo.driver.version>
     </properties>
 
     <dependencies>
@@ -114,26 +114,35 @@
             <artifactId>spark-sql-kafka-0-10_2.11</artifactId>
             <version>${spark.version}</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>org.mongodb.scala</groupId>-->
+<!--            <artifactId>mongo-scala-driver</artifactId>-->
+<!--            <version>4.0.0-beta1</version>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>org.mongodb.spark</groupId>
             <artifactId>mongo-spark-connector_2.11</artifactId>
             <version>${mongdb-spark.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>casbah-core_2.11</artifactId>
             <version>${casbah.version}</version>
         </dependency>
+
         <!--        <dependency>-->
         <!--            <groupId>org.mongodb</groupId>-->
         <!--            <artifactId>mongo-java-driver</artifactId>-->
-        <!--            <version>${mongo.driver.version}</version>-->
+        <!--            <version>3.7.1</version>-->
         <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mongodb</groupId>-->
-        <!--            <artifactId>mongodb-driver</artifactId>-->
-        <!--            <version>${mongo.driver.version}</version>-->
-        <!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.mongodb</groupId>-->
+<!--            <artifactId>mongodb-driver</artifactId>-->
+<!--            <version>${mongo.driver.version}</version>-->
+<!--        </dependency>-->
     </dependencies>
 
     <build>

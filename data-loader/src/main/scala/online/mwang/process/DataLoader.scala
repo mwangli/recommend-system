@@ -1,12 +1,11 @@
 package online.mwang.process
 
-import com.mongodb.casbah.MongoClient
-import com.mongodb.casbah.MongoClientURI
-import com.mongodb.casbah.commons.MongoDBObject
 import online.mwang.bean.{MongoConfig, Product, Rating}
 import online.mwang.utils.MongoUtils
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
+import redis.clients.jedis.Jedis
 
 object DataLoader {
 
@@ -39,5 +38,4 @@ object DataLoader {
     // 4.释放资源
     spark.stop()
   }
-
 }
