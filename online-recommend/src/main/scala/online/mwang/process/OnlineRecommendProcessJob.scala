@@ -140,11 +140,15 @@ object OnlineRecommendProcessJob {
       val res = collection.find(MongoDBObject("userId" -> userId))
       if (res.nonEmpty) {
         collection.update(MongoDBObject("userId" -> userId),
-          MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
+          MongoDBObject("userId" -> userId, "userRecs" -> userRecs.map(mapUserRecsToMongoDBObject)))
       } else {
-        collection.save(MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
+        collection.save(MongoDBObject("userId" -> userId, "userRecs" -> userRecs.map(mapUserRecsToMongoDBObject)))
       }
     }
+  }
+
+  def mapUserRecsToMongoDBObject(userRec: (Int, Double)) = {
+    MongoDBObject("productId" -> userRec._1, "score" -> userRec._2)
   }
 
   def saveProductRating(userId: Int, productId: Int, score: Double, timestamp: Long): Unit = {
