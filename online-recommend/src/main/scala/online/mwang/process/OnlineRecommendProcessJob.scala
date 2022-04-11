@@ -25,7 +25,7 @@ object OnlineRecommendProcessJob {
   val KAFKA_TOPIC = "recommend-item"
   // MongoDB
   val MONGODB_URI = "mongodb://test1:27017/recommend"
-
+  val COLLECTION_NAME = "recommend"
 
   def main(args: Array[String]): Unit = {
     // 1.环境配置
@@ -39,7 +39,6 @@ object OnlineRecommendProcessJob {
     // 2.处理数据
     import sparkSession.implicits._
     // 获取相似度矩阵
-    val ratingsList = MongoUtils.readFromMongoDB(sparkSession, T_RATINGS).as[ProductRating].collect()
     val productRecs = MongoUtils.readFromMongoDB(sparkSession, T_PRODUCT_RECS)
     val productRecsMap = productRecs.as[ProductRecs].rdd.map(item =>
       (item.productId, item.recs.map(x => (x.productId, x.score)).toMap)
@@ -64,16 +63,18 @@ object OnlineRecommendProcessJob {
     })
     ratingStream.foreachRDD { rdd =>
       rdd.foreach {
-        case (userId, productId, _, _) =>
+        case (userId, productId, score, timestamp) =>
           println("rating data coming! >>>>>>>>>>>>>>>>>")
           // 获取当前用户的最近评分
-          val userRecentRatings = getUserRecentRatings(ratingsList, userId)
+          val userRecentRatings = getUserRecentRatings(userId)
           // 获取当前商品相似度最高的商品列表
-          val candidateProducts = getTopSimProducts(ratingsList, userId, productId, productRecsMapBC.value)
+          val candidateProducts = getTopSimProducts(userId, productId, productRecsMapBC.value)
           // 计算每个备选商品的推荐指数
           val userRecs = computeProductScore(candidateProducts, userRecentRatings, productRecsMapBC.value)
           // 更新实时推荐数据
           saveOrUpdateToMongoDB(userId, userRecs)
+          // 保存新的评分数据
+          saveProductRating(userId, productId, score, timestamp)
           println("rating data finished! >>>>>>>>>>>>>>>>>")
       }
     }
@@ -82,14 +83,18 @@ object OnlineRecommendProcessJob {
     ssc.awaitTermination()
   }
 
-  def getUserRecentRatings(ratingsList: Array[ProductRating], userId: Int): Array[(Int, Double)] = {
-    ratingsList.filter(rating => rating.userId == userId).sortWith(_.timestamp > _.timestamp).take(10).map(r => (r.productId, r.score))
+  def getUserRecentRatings(userId: Int): Array[(Int, Double)] = {
+    val collection = MongoUtils.mongoClient(COLLECTION_NAME)(T_RATINGS)
+    val recentRatings = collection.find(MongoDBObject("userId" -> userId)).sort(MongoDBObject("timestamp" -> 1)).toArray
+    recentRatings.map(o => (o.get("productId").asInstanceOf[Int], o.get("score").asInstanceOf[Double]))
   }
 
-  def getTopSimProducts(ratingsList: Array[ProductRating], userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {
+  def getTopSimProducts(userId: Int, productId: Int, simRecs: collection.Map[Int, Map[Int, Double]]) = {
+    val collection = MongoUtils.mongoClient(COLLECTION_NAME)(T_RATINGS)
+    val existProductsId = collection.find(MongoDBObject("userId" -> userId))
+      .map(o => o.get("productId").asInstanceOf[Int]).toArray.distinct
     val simProducts = simRecs(productId)
-    val existProductId = ratingsList.filter(_.userId == userId).map(rating => rating.productId)
-    val topSimProducts = simProducts.filter(recs => !existProductId.contains(recs._1))
+    val topSimProducts = simProducts.filter(recs => !existProductsId.contains(recs._1))
       .toArray.sortWith(_._2 > _._2).take(20).map(_._1)
     topSimProducts
   }
@@ -131,8 +136,7 @@ object OnlineRecommendProcessJob {
 
   def saveOrUpdateToMongoDB(userId: Int, userRecs: Array[(Int, Double)]): Unit = {
     if (userRecs.nonEmpty) {
-      val mongoClient = MongoClient(MongoClientURI(MONGODB_URI))
-      val collection = mongoClient("recommend")(T_ONLINE_USER_RECS)
+      val collection = MongoUtils.mongoClient(COLLECTION_NAME)(T_ONLINE_USER_RECS)
       val res = collection.find(MongoDBObject("userId" -> userId))
       if (res.nonEmpty) {
         collection.update(MongoDBObject("userId" -> userId),
@@ -140,7 +144,16 @@ object OnlineRecommendProcessJob {
       } else {
         collection.save(MongoDBObject("userId" -> userId, "userRecs" -> userRecs))
       }
-      mongoClient.close()
     }
+  }
+
+  def saveProductRating(userId: Int, productId: Int, score: Double, timestamp: Long): Unit = {
+    val collection = MongoUtils.mongoClient(COLLECTION_NAME)(T_RATINGS)
+    collection.save(MongoDBObject(
+      "userId" -> userId,
+      "productId" -> productId,
+      "score" -> score,
+      "timestamp" -> timestamp
+    ))
   }
 }
