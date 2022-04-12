@@ -35,7 +35,7 @@ object ItemCFRecommendProcessJob {
     // 将评分表按照userId两两配对
     val joinedDF = ratingWithCountDF.join(ratingWithCountDF, "userId")
       .toDF("userId", "productId1", "count1", "productId2", "count2")
-      .filter(row => row.get(1) != row.get(3))
+      .filter(row => row.getInt(1) != row.getInt(3))
     // 创建临时表
     joinedDF.createOrReplaceTempView("joinedTemp")
     // 统计每两个商品出现的次数

@@ -31,20 +31,20 @@ object StatisticRecommendProcessJob {
     // 4.统计数据
     // 4.1.热门商品统计
     val hotProductsDF = spark.sql("select productId, count(productId) as count from ratings group by productId order by count desc")
-    //    hotProductsDF.show()
+    // hotProductsDF.show()
     MongoUtils.save2MongoDB(hotProductsDF, T_HOT_PRODUCTS)
     // 4.2.近期热门商品统计过
     // 自定义日期装换UDF
     spark.udf.register("dateFormat", (s: Long) => DateUtils.format(s * 1000, "yyyyMM"))
     val yearmonthRating = spark.sql("select productId, score, dateFormat(timestamp) yearmonth from ratings")
-    //    yearmonthRating.show()
+    // yearmonthRating.show()
     yearmonthRating.createOrReplaceTempView("yearmonthRating")
     val recentHotProductsDF = spark.sql("select yearmonth, productId, count(productId) count from yearmonthRating group by yearmonth, productId order by yearmonth desc, count desc")
-    //    recentHotProductsDF.show()
+    // recentHotProductsDF.show()
     MongoUtils.save2MongoDB(recentHotProductsDF, T_RECENT_HOT_PRODUCTS)
     // 4.3.优质商品统计
     val greatProducts = spark.sql("select productId,avg(score) avgScore from ratings group by productId order by avgScore desc")
-    //    greatProducts.show()
+    // greatProducts.show()
     MongoUtils.save2MongoDB(greatProducts, T_HIGH_SCORE_PRODUCTS)
     // 5.关闭资源
     spark.stop()
