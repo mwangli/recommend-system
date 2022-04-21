@@ -22,7 +22,7 @@ object OnlineRecommendProcessJob {
   // 商品相似度列表
   val T_PRODUCT_RECS = "ProductRecs"
   // KafkaTopic
-  val KAFKA_TOPIC = "recommend-item"
+  val KAFKA_TOPIC = "recommend_item"
   // MongoDB
   val MONGODB_URI = "mongodb://test1:27017/recommend"
   val COLLECTION_NAME = "recommend"
