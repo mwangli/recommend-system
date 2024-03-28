@@ -9,6 +9,7 @@ import org.apache.spark.mllib.recommendation.{ALS, MatrixFactorizationModel, Rat
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
+// 协同过滤推荐模型训练
 object ALSModelTrainer {
 
   def main(args: Array[String]): Unit = {

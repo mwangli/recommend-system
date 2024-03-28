@@ -27,6 +27,7 @@ object OnlineRecommendProcessJob {
   val MONGODB_URI = "mongodb://test1:27017/recommend"
   val COLLECTION_NAME = "recommend"
 
+
   def main(args: Array[String]): Unit = {
     // 1.环境配置
     val sparkConf = new SparkConf()
@@ -47,7 +48,7 @@ object OnlineRecommendProcessJob {
     val productRecsMapBC = sc.broadcast(productRecsMap)
     // 3.连接Kafka
     val kafkaParams = Map[String, Object](
-      "bootstrap.servers" -> "node1:9092,node2:9092,node3:9092",
+      "bootstrap.servers" -> "test1:9092",
       "key.deserializer" -> classOf[StringDeserializer],
       "value.deserializer" -> classOf[StringDeserializer],
       "group.id" -> "recommend-test",

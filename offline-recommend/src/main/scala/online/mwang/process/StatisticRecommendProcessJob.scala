@@ -5,6 +5,7 @@ import online.mwang.utils.{DateUtils, MongoUtils}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+// 静态热门推荐，用于冷启动
 object StatisticRecommendProcessJob {
 
   // 评分表

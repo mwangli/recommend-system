@@ -8,6 +8,7 @@ import org.apache.spark.sql.SparkSession
 import org.jblas.DoubleMatrix
 
 
+// 协同过滤推荐
 object ALSRecommendProcessJob {
 
   // 评分表

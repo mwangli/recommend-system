@@ -6,6 +6,7 @@ import online.mwang.utils.MongoUtils
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
+// 基于物品的协同过滤算法
 object ItemCFRecommendProcessJob {
 
   // 评分表

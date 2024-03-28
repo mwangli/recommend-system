@@ -8,6 +8,8 @@ import org.apache.spark.ml.linalg.SparseVector
 import org.apache.spark.sql.SparkSession
 import org.jblas.DoubleMatrix
 
+
+// 基于内容的相似度推荐
 object TFIDFRecommendProcessJob {
 
   // 商品表
